@@ -1,0 +1,9 @@
+#Node Modules
+/node_modules
+
+#appstate
+appstate.json
+
+#storage
+/persist
+
