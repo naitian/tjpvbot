@@ -35,9 +35,10 @@ function pr(args, botAPI, event) {
     let height = event.body;
     height = height.split(' ')[1];
     let things = height.split(/'|"/g);
-    if (isNaN(filterInt(things[0])) || isNaN(filterInt(things[0])))
+    if (isNaN(filterInt(things[0])))
       return;
-    let num = (things.length === 1) ? filterInt(things[0]) * 12 : filterInt(things[0]) * 12 + filterInt(things[1]);
+    let num = (things[1] === null || isNaN(filterInt(things[1]))) ? 
+      filterInt(things[0]) * 12 : filterInt(things[0]) * 12 + filterInt(things[1]);
 
     storage.getItem('heights', (err, heights) => {
       if (err) {
