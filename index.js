@@ -93,6 +93,99 @@ function scoreboard(args, botAPI, event) {
   });
 }
 
+function note(args, botAPI, message) {
+  'use strict';
+  // Make sure correct number of arguments
+  if(args.length < 2) {
+    botAPI.sendMessage('Oh no, an error occurred!',
+      message.threadID);
+  }
+  else {
+    let name = args[0];
+    let note = args.slice(1).join(' ');
+    if (!note) {
+      botAPI.sendMessage('No note specified!',
+        message.threadID);
+    }
+    botAPI.getUserByName(name, message.threadID, (err, res) => {
+      if (err)
+        return console.error(err);
+
+      if (res.length > 1) {
+        let response = 'There is more than one person by that name!\nDo you mean:\n';
+        res.forEach((val) => {
+          response += '\t- ' + val.name + '\n';
+        });
+        botAPI.sendMessage(response, message.threadID);
+        return;
+      }
+
+      let id = res[0].id;  
+      storage.getItem('notes', (err, notes) => {
+        if (err)
+          return console.error(err);
+        if (!notes) {
+          notes = {};
+          notes[id] = {};
+          notes[id][message.threadID] = [note];
+        }
+        else {
+          if (notes[id]) {
+            if (notes[id][message.threadID])
+              notes[id][message.threadID].push(note);
+            else {
+              notes[id][message.threadID] = [note];
+            }
+          }
+          else {
+            notes[id] = {};
+            notes[id][message.threadID] = [note];
+          }
+        }
+        storage.setItem('notes', notes, (err) => {
+          if(err)
+            return console.error(err);
+          else
+            return botAPI.sendMessage('Note for ' + res[0].name + ' set.', message.threadID);
+        });
+      });
+    });
+  }
+}
+
+function sendNote (botAPI, message) {
+  'use strict';
+  botAPI.api.getUserInfo(message.senderID, (err, res) => {
+    if (err) {
+      console.error(err);
+    }
+    else {
+      storage.getItem('notes', (err, notes) => {
+        if (err)
+          return console.error(err);
+        if (!notes)
+          return;
+        if (notes[message.senderID] && notes[message.senderID][message.threadID]) {
+          if (notes[message.senderID][message.threadID].length > 0) {
+            let response = 'Hey, ' + 
+            res[message.senderID].name + 
+            '! Here are some notes for you!\n';
+            while (notes[message.senderID][message.threadID][0]) {
+              response += '\t"'  + notes[message.senderID][message.threadID][0] + '"\n';
+              notes[message.senderID][message.threadID].shift();
+            }
+            botAPI.sendMessage(response, message.threadID);
+            storage.setItem('notes', notes, (err) => {
+              if (err)
+                console.error(err);
+            });
+          }
+        }
+      });
+    }
+  });
+}
+
 //where credentials is the user's credentials as an object, fields `email` and `password
 function authenticate(credentials){
   'use strict';
@@ -109,7 +202,9 @@ function authenticate(credentials){
     let gb = new Bot('Pole Vault Bot', api);
     gb.command('!advice', quote, '!advice')
       .command('!pr', pr, '!pr <height>')
-      .command('!scoreboard', scoreboard, '!scoreboard');
+      .command('!scoreboard', scoreboard, '!scoreboard')
+      .command('!note', note, '!note <name> <message>')
+      .event(sendNote, 'message');
   });
 
 }
