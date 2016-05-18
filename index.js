@@ -22,7 +22,13 @@ function quote(args, botAPI, event) {
     'No bend whatsoever!',
     'Plant like you mean it!', 
     'Ya got a little bend!', 
-    'No bend whatsoever!'
+    'No bend whatsoever!',
+    'I\'m not saying lock your arm...but lock it',
+    'Jump and Drive!',
+    'A good plant gets you higher!',
+    'Run faster!',
+    'Jump higher!',
+    'Vault higher!'
   ];
   botAPI.sendMessage(responses[Math.floor(Math.random() * responses.length)], event.threadID);
 }
